@@ -1,0 +1,98 @@
+@startuml
+autonumber
+
+box "CLIENT" #F5F5DC
+actor User 
+participant "BE App" as BEApp 
+
+endbox
+box "MERCHANT" #F0FFF0
+participant "Merchant App" as MerchantApp
+actor Merchant as Merchant
+endbox
+
+box "DRIVER" #ECF0F1
+participant "Driver App" as DriverApp
+actor Driver
+endbox
+
+group STEP 1: CREATE REQUEST
+activate User
+User -[#darkred]> BEApp: <font color=darkred><b>Create request</b></font>
+activate BEApp
+BEApp --> User: Display ETA to user
+deactivate User
+
+BEApp -> MerchantApp: Send request
+activate MerchantApp
+MerchantApp -> Merchant: Receive request
+deactivate MerchantApp
+|||
+end
+
+group STEP 2: LOOK FOR DRIVER 
+BEApp -> DriverApp: Look for driver
+activate DriverApp
+DriverApp -> Driver: Display request
+activate Driver
+Driver -> DriverApp: Accept
+DriverApp -> Driver: Assign the order
+DriverApp --> MerchantApp: //Notify//
+DriverApp --> BEApp: //Notify//
+deactivate DriverApp
+Driver -[#darkred]> Merchant: <font color=darkred><b>Move to merchant
+activate Merchant
+deactivate Driver
+|||
+end
+
+group STEP 3: WAIT FOR PREPARATION 
+Merchant -[#darkred]> Merchant: <font color=darkred><b>Start preparing food
+Merchant --> MerchantApp: //Notify//
+deactivate Merchant
+activate MerchantApp
+MerchantApp --> DriverApp: //Notify//
+deactivate MerchantApp
+activate DriverApp
+DriverApp --> Driver: //Notify//
+activate Driver
+MerchantApp --> BEApp: //Notify//
+BEApp --> User: //Notify// 
+activate User
+activate Merchant
+Merchant -> Merchant: Food is ready
+Merchant --> MerchantApp: //Notify//
+deactivate Merchant
+activate MerchantApp
+MerchantApp --> DriverApp: //Notify//
+
+DriverApp --> Driver: //Notify//
+deactivate DriverApp
+
+MerchantApp --> BEApp: //Notify//
+deactivate MerchantApp
+BEApp --> User: //Notify// 
+deactivate BEApp
+Merchant -> Driver: Give order
+|||
+end
+
+group STEP 4: WAIT FOR DELIVERY
+Driver -> Driver: On Delivery way
+
+Driver -[#darkred]> User: <font color=darkred><b>Arrive and call to pick up order
+User -> Driver: Get order
+deactivate User
+Driver -> DriverApp: Notify order completed
+deactivate Driver
+activate DriverApp
+DriverApp --> MerchantApp: //Notify//
+activate MerchantApp
+MerchantApp --> Merchant: //Notify//
+deactivate MerchantApp
+DriverApp --> BEApp: //Notify// 
+deactivate DriverApp
+|||
+end
+
+@enduml
